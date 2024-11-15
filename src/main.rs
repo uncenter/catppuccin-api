@@ -1,11 +1,9 @@
-use axum::{
-    extract::{Path, Query},
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
+use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use catppuccin_api::models::{
+    self,
+    ports::{Category, Port, Showcase},
+    shared::Collaborator,
 };
-use catppuccin_api::models::{self, ports::Port, shared::Collaborator};
 use lazy_static::lazy_static;
 use serde::Serialize;
 
@@ -58,9 +56,12 @@ async fn main() {
     // build our application with a single route
     let app = Router::new()
         .route("/ports", get(list_ports))
-        .route("/port/:port", get(get_port))
+        .route("/port/:identifier", get(get_port))
         .route("/collaborators", get(list_collaborators))
-        .route("/collaborator/:username", get(get_collaborator));
+        .route("/collaborator/:username", get(get_collaborator))
+        .route("/categories", get(list_categories))
+        .route("/category/:key", get(get_category))
+        .route("/showcases", get(list_showcases));
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -72,13 +73,13 @@ async fn list_ports() -> Json<Vec<Merge<Identifier, Port>>> {
 }
 
 async fn get_port(
-    Path(port): Path<String>,
+    Path(identifier): Path<String>,
 ) -> Result<Json<Merge<Identifier, Port>>, impl IntoResponse> {
-    match PORTS.iter().find(|p| p.f1.identifier == port) {
-        Some(p) => Ok(Json(p.clone())),
+    match PORTS.iter().find(|port| port.f1.identifier == identifier) {
+        Some(port) => Ok(Json(port.clone())),
         None => Err((
             StatusCode::NOT_FOUND,
-            format!("No port with identifier {}", port),
+            format!("No port with identifier {}", identifier),
         )),
     }
 }
@@ -102,4 +103,26 @@ async fn get_collaborator(
             format!("No collaborator with username {}", username),
         )),
     }
+}
+
+async fn list_categories() -> Json<Vec<Category>> {
+    Json(PORTS_DATA.categories.iter().cloned().collect())
+}
+
+async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl IntoResponse> {
+    match PORTS_DATA
+        .categories
+        .iter()
+        .find(|category| category.key == key)
+    {
+        Some(c) => Ok(Json(c.clone())),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            format!("No category with key {}", key),
+        )),
+    }
+}
+
+async fn list_showcases() -> Json<Vec<Showcase>> {
+    Json(PORTS_DATA.showcases.iter().cloned().collect())
 }
