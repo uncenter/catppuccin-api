@@ -3,9 +3,9 @@
 ## Routes
 
 - `/ports`
-  - `/port/:port`
+  - `/port/:identifier`
 - `/collaborators`
   - `/collaborator/:username`
 - `/categories`
-  - `/category/:category`
+  - `/category/:key`
 - `/showcases`
