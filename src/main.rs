@@ -112,7 +112,7 @@ async fn get_port(
             format!("No port with identifier {}", identifier),
         )),
         1 => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Single(
-            matches.get(0).unwrap().clone(),
+            matches.first().unwrap().clone(),
         ))),
         _ => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Multiple(
             matches,
@@ -142,7 +142,7 @@ async fn get_collaborator(
 }
 
 async fn list_categories() -> Json<Vec<Category>> {
-    Json(PORTS_DATA.categories.iter().cloned().collect())
+    Json(PORTS_DATA.categories.to_vec())
 }
 
 async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl IntoResponse> {
@@ -160,5 +160,5 @@ async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl In
 }
 
 async fn list_showcases() -> Json<Vec<Showcase>> {
-    Json(PORTS_DATA.showcases.iter().cloned().collect())
+    Json(PORTS_DATA.showcases.to_vec())
 }
