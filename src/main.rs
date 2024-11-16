@@ -4,6 +4,7 @@ use catppuccin_api::models::{
     ports::{Category, Port, Showcase},
     shared::Collaborator,
 };
+use indoc::indoc;
 use lazy_static::lazy_static;
 use serde::Serialize;
 
@@ -55,6 +56,7 @@ pub struct Identifier {
 async fn main() {
     // build our application with a single route
     let app = Router::new()
+        .route("/", get(root))
         .route("/ports", get(list_ports))
         .route("/port/:identifier", get(get_port))
         .route("/collaborators", get(list_collaborators))
@@ -66,6 +68,30 @@ async fn main() {
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn root() -> String {
+    indoc! {"
+      --------------
+    < Catppuccin API >
+      --------------
+      \\
+        \\
+         ／l、
+       （ﾟ､ ｡ ７
+         l  ~ヽ
+         じしf_,)ノ
+
+    === Routes ===
+    - `/ports`
+        - `/port/:identifier`
+    - `/collaborators`
+        - `/collaborator/:username`
+    - `/categories`
+        - `/category/:key`
+    - `/showcases`
+    "}
+    .to_string()
 }
 
 async fn list_ports() -> Json<Vec<Merge<Identifier, Port>>> {
