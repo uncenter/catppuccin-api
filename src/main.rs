@@ -152,10 +152,7 @@ async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl In
         .find(|category| category.key == key)
     {
         Some(c) => Ok(Json(c.clone())),
-        None => Err((
-            StatusCode::NOT_FOUND,
-            format!("No category with key {key}"),
-        )),
+        None => Err((StatusCode::NOT_FOUND, format!("No category with key {key}"))),
     }
 }
 
