@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::shared::{Collaborator, StringOrStrings};
+use super::shared::{Collaborator, SingleOrMultiple};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
@@ -18,7 +18,7 @@ pub struct UserstylesRoot {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Userstyle {
-    pub name: StringOrStrings,
+    pub name: SingleOrMultiple<String>,
     pub categories: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
@@ -32,5 +32,5 @@ pub struct Userstyle {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Readme {
-    pub app_link: StringOrStrings,
+    pub app_link: SingleOrMultiple<String>,
 }

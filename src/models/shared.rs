@@ -4,14 +4,14 @@ use super::{ports::Port, userstyles::Userstyle};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum StringOrStrings {
-    Single(String),
-    Multiple(Vec<String>),
+pub enum SingleOrMultiple<T> {
+    Single(T),
+    Multiple(Vec<T>),
 }
 
-impl Default for StringOrStrings {
+impl<T: Default> Default for SingleOrMultiple<T> {
     fn default() -> Self {
-        StringOrStrings::Single(String::new())
+        SingleOrMultiple::Single(T::default())
     }
 }
 
@@ -25,15 +25,15 @@ impl From<Userstyle> for Port {
     fn from(userstyle: Userstyle) -> Self {
         Port {
             name: match userstyle.name {
-                StringOrStrings::Single(s) => s,
-                StringOrStrings::Multiple(s) => s.join("/"),
+                SingleOrMultiple::<String>::Single(s) => s,
+                SingleOrMultiple::<String>::Multiple(s) => s.join("/"),
             },
             categories: userstyle.categories,
             upstreamed: Some(false),
-            platform: StringOrStrings::Single("agnostic".to_string()),
+            platform: SingleOrMultiple::<String>::Single("agnostic".to_string()),
             url: Some(match userstyle.readme.app_link {
-                StringOrStrings::Single(s) => s,
-                StringOrStrings::Multiple(s) => s[0].clone(),
+                SingleOrMultiple::<String>::Single(s) => s,
+                SingleOrMultiple::<String>::Multiple(s) => s[0].clone(),
             }),
             links: None,
             icon: userstyle.icon,
@@ -42,7 +42,7 @@ impl From<Userstyle> for Port {
             current_maintainers: userstyle.current_maintainers,
             past_maintainers: userstyle.past_maintainers,
 
-            is_userstyle: Some(true),
+            is_userstyle: true,
         }
     }
 }

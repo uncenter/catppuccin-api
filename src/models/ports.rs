@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::shared::{Collaborator, StringOrStrings};
+use super::shared::{Collaborator, SingleOrMultiple};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
@@ -18,7 +18,7 @@ pub struct Port {
     pub name: String,
     pub categories: Vec<String>,
     pub upstreamed: Option<bool>,
-    pub platform: StringOrStrings,
+    pub platform: SingleOrMultiple<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
     pub links: Option<Vec<Link>>,
@@ -30,7 +30,7 @@ pub struct Port {
     pub past_maintainers: Option<Vec<Collaborator>>,
 
     #[serde(default)]
-    pub is_userstyle: Option<bool>,
+    pub is_userstyle: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
