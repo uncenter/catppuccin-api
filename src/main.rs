@@ -14,21 +14,39 @@ lazy_static! {
     pub static ref PORTS_DATA: models::ports::Root = serde_json::from_str(PORTS_JSON).unwrap();
     pub static ref USERSTYLES_DATA: models::userstyles::Root =
         serde_json::from_str(USERSTYLES_JSON).unwrap();
-    pub static ref PORTS: Vec<Merge<Identifier, Port>> = PORTS_DATA
+    pub static ref PORTS: Vec<ModifiedPort> = PORTS_DATA
         .ports
         .iter()
-        .map(|p| Merge {
-            f1: Identifier {
-                identifier: p.0.to_string()
-            },
-            f2: p.1.clone(),
+        .map(|(identifier, port)| (identifier.clone(), port.clone()))
+        .chain(
+            USERSTYLES_DATA
+                .userstyles
+                .iter()
+                .map(|(identifier, userstyle)| {
+                    let port: Port = userstyle.clone().into();
+                    (identifier.clone(), port)
+                })
+        )
+        .map(|(identifier, port)| {
+            let categories = port
+                .categories
+                .iter()
+                .map(|c| {
+                    PORTS_DATA
+                        .categories
+                        .iter()
+                        .find(|category| category.key == *c)
+                        .unwrap()
+                })
+                .cloned()
+                .collect();
+
+            ModifiedPort {
+                identifier,
+                port,
+                categories,
+            }
         })
-        .chain(USERSTYLES_DATA.userstyles.iter().map(|p| Merge {
-            f1: Identifier {
-                identifier: p.0.to_string()
-            },
-            f2: p.1.clone().into(),
-        }))
         .collect::<Vec<_>>();
     pub static ref COLLABORATORS: Vec<Collaborator> = PORTS_DATA
         .collaborators
@@ -39,11 +57,11 @@ lazy_static! {
 }
 
 #[derive(Serialize, Clone)]
-pub struct Merge<T1: Serialize, T2: Serialize> {
+pub struct ModifiedPort {
+    identifier: String,
     #[serde(flatten)]
-    f1: T1,
-    #[serde(flatten)]
-    f2: T2,
+    port: Port,
+    categories: Vec<Category>,
 }
 
 #[derive(Serialize, Clone)]
@@ -68,14 +86,12 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn list_ports() -> Json<Vec<Merge<Identifier, Port>>> {
+async fn list_ports() -> Json<Vec<ModifiedPort>> {
     Json(PORTS.iter().cloned().collect())
 }
 
-async fn get_port(
-    Path(identifier): Path<String>,
-) -> Result<Json<Merge<Identifier, Port>>, impl IntoResponse> {
-    match PORTS.iter().find(|port| port.f1.identifier == identifier) {
+async fn get_port(Path(identifier): Path<String>) -> Result<Json<ModifiedPort>, impl IntoResponse> {
+    match PORTS.iter().find(|port| port.identifier == identifier) {
         Some(port) => Ok(Json(port.clone())),
         None => Err((
             StatusCode::NOT_FOUND,
