@@ -65,31 +65,44 @@ async fn main() {
         .route("/category/:key", get(get_category))
         .route("/showcases", get(list_showcases));
 
-    // run our app with hyper, listening globally on port 3000
+    println!("http://localhost:8080");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 
 async fn root() -> String {
     indoc! {"
-      --------------
-    < Catppuccin API >
-      --------------
-      \\
-        \\
-         ／l、
-       （ﾟ､ ｡ ７
-         l  ~ヽ
-         じしf_,)ノ
+    Catppuccin API
+    ==============
 
-    === Routes ===
-    - `/ports`
-        - `/port/:identifier`
-    - `/collaborators`
-        - `/collaborator/:username`
-    - `/categories`
-        - `/category/:key`
-    - `/showcases`
+        ／l、
+      （ﾟ､ ｡ ７
+        l  ~ヽ
+        じしf_,)ノ
+    
+    Unofficial, experimental API for interacting with Catppuccin port metadata.
+
+    Routes
+    ------
+
+    # Includes ports and userstyles combined. Use the is-userstyle field to differentiate.
+    # Returns a port object if the identifier matches a single port,
+    # or an array of port objects if there are multiple matching identifiers.
+    /ports
+        /port/:identifier
+
+    /collaborators
+        /collaborator/:username
+
+    /categories
+        /category/:key
+
+    /showcases
+
+    Source
+    ------
+
+    https://github.com/uncenter/ctp-api
     "}
     .to_string()
 }
