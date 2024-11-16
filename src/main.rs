@@ -2,7 +2,7 @@ use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get
 use catppuccin_api::models::{
     self,
     ports::{Category, Port, Showcase},
-    shared::Collaborator,
+    shared::{Collaborator, SingleOrMultiple},
 };
 use indoc::indoc;
 use lazy_static::lazy_static;
@@ -39,7 +39,7 @@ lazy_static! {
         .collect::<Vec<_>>();
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Merge<T1: Serialize, T2: Serialize> {
     #[serde(flatten)]
     f1: T1,
@@ -47,7 +47,7 @@ pub struct Merge<T1: Serialize, T2: Serialize> {
     f2: T2,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Identifier {
     identifier: String,
 }
@@ -100,13 +100,23 @@ async fn list_ports() -> Json<Vec<Merge<Identifier, Port>>> {
 
 async fn get_port(
     Path(identifier): Path<String>,
-) -> Result<Json<Merge<Identifier, Port>>, impl IntoResponse> {
-    match PORTS.iter().find(|port| port.f1.identifier == identifier) {
-        Some(port) => Ok(Json(port.clone())),
-        None => Err((
+) -> Result<Json<SingleOrMultiple<Merge<Identifier, Port>>>, impl IntoResponse> {
+    let matches: Vec<_> = PORTS
+        .iter()
+        .filter(|port| port.f1.identifier.to_lowercase() == identifier)
+        .cloned()
+        .collect();
+    match matches.len() {
+        0 => Err((
             StatusCode::NOT_FOUND,
             format!("No port with identifier {}", identifier),
         )),
+        1 => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Single(
+            matches.get(0).unwrap().clone(),
+        ))),
+        _ => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Multiple(
+            matches,
+        ))),
     }
 }
 
