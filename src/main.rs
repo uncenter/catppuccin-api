@@ -109,7 +109,7 @@ async fn get_port(
     match matches.len() {
         0 => Err((
             StatusCode::NOT_FOUND,
-            format!("No port with identifier {}", identifier),
+            format!("No port with identifier {identifier}"),
         )),
         1 => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Single(
             matches.first().unwrap().clone(),
@@ -136,13 +136,13 @@ async fn get_collaborator(
         Some(p) => Ok(Json(p.clone())),
         None => Err((
             StatusCode::NOT_FOUND,
-            format!("No collaborator with username {}", username),
+            format!("No collaborator with username {username}"),
         )),
     }
 }
 
 async fn list_categories() -> Json<Vec<Category>> {
-    Json(PORTS_DATA.categories.to_vec())
+    Json(PORTS_DATA.categories.clone())
 }
 
 async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl IntoResponse> {
@@ -154,11 +154,11 @@ async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl In
         Some(c) => Ok(Json(c.clone())),
         None => Err((
             StatusCode::NOT_FOUND,
-            format!("No category with key {}", key),
+            format!("No category with key {key}"),
         )),
     }
 }
 
 async fn list_showcases() -> Json<Vec<Showcase>> {
-    Json(PORTS_DATA.showcases.to_vec())
+    Json(PORTS_DATA.showcases.clone())
 }

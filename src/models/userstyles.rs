@@ -11,11 +11,6 @@ pub struct Root {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UserstylesRoot {
-    pub userstyles: HashMap<String, Userstyle>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Userstyle {
     pub name: SingleOrMultiple<String>,
