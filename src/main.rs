@@ -58,11 +58,11 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/ports", get(list_ports))
-        .route("/port/:identifier", get(get_port))
+        .route("/ports/:identifier", get(get_port))
         .route("/collaborators", get(list_collaborators))
-        .route("/collaborator/:username", get(get_collaborator))
+        .route("/collaborators/:username", get(get_collaborator))
         .route("/categories", get(list_categories))
-        .route("/category/:key", get(get_category))
+        .route("/categories/:key", get(get_category))
         .route("/showcases", get(list_showcases));
 
     println!("http://localhost:8080");
@@ -89,13 +89,13 @@ async fn root() -> String {
     # Returns a port object if the identifier matches a single port,
     # or an array of port objects if there are multiple matching identifiers.
     /ports
-        /port/:identifier
+        /ports/:identifier
 
     /collaborators
-        /collaborator/:username
+        /collaborators/:username
 
     /categories
-        /category/:key
+        /categories/:key
 
     /showcases
 
