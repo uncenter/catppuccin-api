@@ -5,7 +5,6 @@ use catppuccin_api::models::{
     shared::Collaborator,
 };
 
-use serde::Serialize;
 use std::collections::HashMap;
 
 use indoc::indoc;
@@ -54,22 +53,8 @@ lazy_static! {
         .collect();
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct Merge<T1: Serialize, T2: Serialize> {
-    #[serde(flatten)]
-    f1: T1,
-    #[serde(flatten)]
-    f2: T2,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct Identifier {
-    identifier: String,
-}
-
 #[tokio::main]
 async fn main() {
-    // build our application with a single route
     let app = Router::new()
         .route("/", get(root))
         .route("/ports", get(list_ports))
