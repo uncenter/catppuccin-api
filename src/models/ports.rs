@@ -35,6 +35,7 @@ pub struct Port {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Category {
+    #[serde(skip_serializing)]
     pub key: String,
     pub name: String,
     pub description: String,

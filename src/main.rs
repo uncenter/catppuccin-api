@@ -2,11 +2,14 @@ use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get
 use catppuccin_api::models::{
     self,
     ports::{Category, Port, Showcase},
-    shared::{Collaborator, SingleOrMultiple},
+    shared::Collaborator,
 };
+
+use serde::Serialize;
+use std::collections::HashMap;
+
 use indoc::indoc;
 use lazy_static::lazy_static;
-use serde::Serialize;
 
 pub const PORTS_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/ports.json"));
 pub const USERSTYLES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/userstyles.json"));
@@ -15,28 +18,40 @@ lazy_static! {
     pub static ref PORTS_DATA: models::ports::Root = serde_json::from_str(PORTS_JSON).unwrap();
     pub static ref USERSTYLES_DATA: models::userstyles::Root =
         serde_json::from_str(USERSTYLES_JSON).unwrap();
-    pub static ref PORTS: Vec<Merge<Identifier, Port>> = PORTS_DATA
+    pub static ref PORTS: HashMap<String, Vec<Port>> = PORTS_DATA
         .ports
         .iter()
-        .map(|p| Merge {
-            f1: Identifier {
-                identifier: p.0.to_string()
-            },
-            f2: p.1.clone(),
-        })
-        .chain(USERSTYLES_DATA.userstyles.iter().map(|p| Merge {
-            f1: Identifier {
-                identifier: p.0.to_string()
-            },
-            f2: p.1.clone().into(),
-        }))
-        .collect::<Vec<_>>();
-    pub static ref COLLABORATORS: Vec<Collaborator> = PORTS_DATA
+        .map(|(identifier, port)| (identifier.clone(), port.clone()))
+        .chain(
+            USERSTYLES_DATA
+                .userstyles
+                .iter()
+                .map(|u| (u.0.clone(), Into::<Port>::into(u.1.clone())))
+        )
+        .fold(HashMap::new(), |mut map, (identifier, port)| {
+            map.entry(identifier.to_string())
+                .or_insert_with(Vec::new)
+                .push(port.clone());
+            map
+        });
+    pub static ref COLLABORATORS: HashMap<String, Collaborator> = PORTS_DATA
         .collaborators
         .iter()
         .chain(USERSTYLES_DATA.collaborators.iter())
-        .cloned()
-        .collect::<Vec<_>>();
+        .map(|collaborator| (
+            collaborator
+                .url
+                .strip_prefix("https://github.com/")
+                .expect("collaborator url should start with github href")
+                .to_string(),
+            collaborator.clone()
+        ))
+        .collect();
+    pub static ref CATEGORIES: HashMap<String, Category> = PORTS_DATA
+        .categories
+        .iter()
+        .map(|category| (category.key.clone(), category.clone()))
+        .collect();
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -86,17 +101,20 @@ async fn root() -> String {
     ------
 
     # Includes ports and userstyles combined. Use the is-userstyle field to differentiate.
-    # Returns a port object if the identifier matches a single port,
-    # or an array of port objects if there are multiple matching identifiers.
+    # Returns an object, where the keys are the port identifiers and the values are arrays of ports matching the identifier (userstyles and ports might have duplicate identifiers, e.g. `mdbook`).
     /ports
         /ports/:identifier
 
+    # Returns an object, where the keys are the usernames and the values are objects containing collaborator information.
+    # Duplicate usernames between ports/userstyles are resolved by picking one to use, simply assuming they are identical.
     /collaborators
         /collaborators/:username
 
+    # Returns an object of category keys and values.
     /categories
         /categories/:key
 
+    # Returns an array of showcases.
     /showcases
 
     Source
@@ -107,65 +125,47 @@ async fn root() -> String {
     .to_string()
 }
 
-async fn list_ports() -> Json<Vec<Merge<Identifier, Port>>> {
-    Json(PORTS.iter().cloned().collect())
+async fn list_ports() -> Json<HashMap<String, Vec<Port>>> {
+    Json(PORTS.clone())
 }
 
-async fn get_port(
-    Path(identifier): Path<String>,
-) -> Result<Json<SingleOrMultiple<Merge<Identifier, Port>>>, impl IntoResponse> {
-    let matches: Vec<_> = PORTS
-        .iter()
-        .filter(|port| port.f1.identifier.to_lowercase() == identifier)
-        .cloned()
-        .collect();
-    match matches.len() {
-        0 => Err((
+async fn get_port(Path(identifier): Path<String>) -> Result<Json<Vec<Port>>, impl IntoResponse> {
+    match PORTS.get(&identifier) {
+        Some(p) => Ok(Json(p.clone())),
+        None => Err((
             StatusCode::NOT_FOUND,
-            format!("No port with identifier {identifier}"),
+            format!("No port with identifier '{identifier}'"),
         )),
-        1 => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Single(
-            matches.first().unwrap().clone(),
-        ))),
-        _ => Ok(Json(SingleOrMultiple::<Merge<Identifier, Port>>::Multiple(
-            matches,
-        ))),
     }
 }
 
-async fn list_collaborators() -> Json<Vec<Collaborator>> {
-    Json(COLLABORATORS.iter().cloned().collect())
+async fn list_collaborators() -> Json<HashMap<String, Collaborator>> {
+    Json(COLLABORATORS.clone())
 }
 
 async fn get_collaborator(
     Path(username): Path<String>,
 ) -> Result<Json<Collaborator>, impl IntoResponse> {
-    match COLLABORATORS.iter().find(|c| {
-        c.url
-            .strip_prefix("https://github.com/")
-            .expect("collaborator url should start with github href")
-            == username
-    }) {
-        Some(p) => Ok(Json(p.clone())),
+    match COLLABORATORS.get(&username) {
+        Some(c) => Ok(Json(c.clone())),
         None => Err((
             StatusCode::NOT_FOUND,
-            format!("No collaborator with username {username}"),
+            format!("No collaborator with username '{username}'"),
         )),
     }
 }
 
-async fn list_categories() -> Json<Vec<Category>> {
-    Json(PORTS_DATA.categories.clone())
+async fn list_categories() -> Json<HashMap<String, Category>> {
+    Json(CATEGORIES.clone())
 }
 
 async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl IntoResponse> {
-    match PORTS_DATA
-        .categories
-        .iter()
-        .find(|category| category.key == key)
-    {
+    match CATEGORIES.get(&key) {
         Some(c) => Ok(Json(c.clone())),
-        None => Err((StatusCode::NOT_FOUND, format!("No category with key {key}"))),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            format!("No category with key '{key}'"),
+        )),
     }
 }
 
