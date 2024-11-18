@@ -1,6 +1,6 @@
 # catppuccin-api
 
-Soothing pastel REST API for querying Catpppuccin ports and metadata.
+Soothing pastel REST API for querying Catpppuccin ports and metadata. Written in Rust, using the [Axum](https://github.com/tokio-rs/axum) framework, and deployed on [Fly.io](https://fly.io/). Data is sourced from the two YAML metadata files, [`ports.yml`](https://github.com/catppuccin/catppuccin/blob/main/resources/ports.yml) and [`userstyles.yml`](https://github.com/catppuccin/userstyles/blob/main/scripts/userstyles.yml), and somewhat restructured to combine the two sources.
 
 ## Routes
 
