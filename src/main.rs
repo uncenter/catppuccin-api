@@ -1,4 +1,5 @@
 use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use catppuccin::{Palette, PALETTE};
 use catppuccin_api::models::{
     self,
     ports::{Category, Port, Showcase},
@@ -63,7 +64,8 @@ async fn main() {
         .route("/collaborators/:username", get(get_collaborator))
         .route("/categories", get(list_categories))
         .route("/categories/:key", get(get_category))
-        .route("/showcases", get(list_showcases));
+        .route("/showcases", get(list_showcases))
+        .route("/palette", get(get_palette));
 
     println!("http://localhost:8080");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
@@ -101,6 +103,9 @@ async fn root() -> String {
 
     # Returns an array of showcases.
     /showcases
+
+    # Returns the color palette.
+    /palette
 
     Source
     ------
@@ -156,4 +161,8 @@ async fn get_category(Path(key): Path<String>) -> Result<Json<Category>, impl In
 
 async fn list_showcases() -> Json<Vec<Showcase>> {
     Json(PORTS_DATA.showcases.clone())
+}
+
+async fn get_palette() -> Json<Palette> {
+    Json(PALETTE)
 }

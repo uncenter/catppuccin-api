@@ -38,6 +38,10 @@ Returns an object of category information.
 
 Returns an array of showcases.
 
+### `/palette`
+
+Returns the color palette.
+
 ## License
 
 [Apache-2.0](LICENSE)

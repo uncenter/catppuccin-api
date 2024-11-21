@@ -6,6 +6,7 @@ license = "Apache-2.0"
 
 [dependencies]
 axum = "0.7.7"
+catppuccin = { version = "2.4.0", features = ["serde"] }
 indoc = "2.0.5"
 lazy_static = "1.5.0"
 serde = { version = "1.0.215", features = ["derive"] }
