@@ -105,7 +105,7 @@ async fn root() -> String {
     Source
     ------
 
-    https://github.com/uncenter/ctp-api
+    https://github.com/uncenter/catppuccin-api
     "}
     .to_string()
 }
