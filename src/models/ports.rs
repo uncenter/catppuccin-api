@@ -8,7 +8,6 @@ use super::shared::{Collaborator, SingleOrMultiple};
 pub struct Root {
     pub collaborators: Vec<Collaborator>,
     pub ports: HashMap<String, Port>,
-    pub categories: Vec<Category>,
     pub showcases: Vec<Showcase>,
 }
 
@@ -31,15 +30,6 @@ pub struct Port {
 
     #[serde(default)]
     pub is_userstyle: bool,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Category {
-    #[serde(skip_serializing)]
-    pub key: String,
-    pub name: String,
-    pub description: String,
-    pub emoji: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

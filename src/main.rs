@@ -2,7 +2,8 @@ use axum::{extract::Path, http::StatusCode, response::IntoResponse, routing::get
 use catppuccin::{Palette, PALETTE};
 use catppuccin_api::models::{
     self,
-    ports::{Category, Port, Showcase},
+    categories::Category,
+    ports::{Port, Showcase},
     shared::Collaborator,
 };
 
@@ -12,10 +13,13 @@ use indoc::indoc;
 use lazy_static::lazy_static;
 
 pub const PORTS_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/ports.json"));
+pub const CATEGORIES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/categories.json"));
 pub const USERSTYLES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/userstyles.json"));
 
 lazy_static! {
     pub static ref PORTS_DATA: models::ports::Root = serde_json::from_str(PORTS_JSON).unwrap();
+    pub static ref CATEGORIES_DATA: models::categories::Root =
+        serde_json::from_str(CATEGORIES_JSON).unwrap();
     pub static ref USERSTYLES_DATA: models::userstyles::Root =
         serde_json::from_str(USERSTYLES_JSON).unwrap();
     pub static ref PORTS: HashMap<String, Vec<Port>> = PORTS_DATA
@@ -47,8 +51,7 @@ lazy_static! {
             collaborator.clone()
         ))
         .collect();
-    pub static ref CATEGORIES: HashMap<String, Category> = PORTS_DATA
-        .categories
+    pub static ref CATEGORIES: HashMap<String, Category> = CATEGORIES_DATA
         .iter()
         .map(|category| (category.key.clone(), category.clone()))
         .collect();
